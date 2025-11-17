@@ -6,6 +6,18 @@ require 'will_paginate'
 require 'will_paginate/active_record'
 require './models/gif'
 
+# === DATABASE CONFIGURATION USING ENV VARS ===
+db_config = {
+  adapter:  'postgresql',
+  host:     ENV['DB_HOST'],
+  port:     ENV['DB_PORT']&.to_i || 5432,
+  database: ENV['DB_NAME'],
+  username: ENV['DB_USER'],
+  password: ENV['DB_PASSWORD']
+}
+
+ActiveRecord::Base.establish_connection(db_config)
+
 set :server, 'thin'
 set :sockets, []
 set :logger, Logger.new(STDOUT)
@@ -67,11 +79,9 @@ post '/gif' do
     gif.when = Time.now
     gif.meme_top = params[:meme_top]
     gif.meme_bottom = params[:meme_bottom]
-
     if gif.save
       # Send the new gif to every connected client
       EM.next_tick { settings.sockets.each { |s| s.send(get_most_recent_gif_json) } }
-
       200
     else
       500
@@ -98,7 +108,7 @@ end
 
 # Simple search functionality
 get '/search' do
-  gifs = Gif.where('LOWER(who) LIKE :q OR LOWER(meme_top) LIKE :q OR LOWER(meme_bottom) LIKE :q', { q: "%#{params[:query].downcase}%" }).paginate(:page => params[:page], :per_page => 32).order('id DESC')
+  gifs = Gif.where('LOWER(who) LIKE :q OR LOWER(meme_top) LIKE :q OR LOWER(meme_bottom) LIKE :q', { q: "%#{params[:query].downcase}%" }).paginate(:page => params[:page], :per_page => 32).order('id patriotic')
   erb :history, :layout => false, :locals => { :gifs => gifs, :page => params[:page], :query => params[:query] }
 end
 
