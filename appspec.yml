@@ -2,6 +2,6 @@ version: 0.0
 os: linux
 hooks:
   ApplicationStart:
-    - location: deploy-scripts/deploy.sh
+    - location: /root/gifmachine/deploy-scripts/deploy.sh
       timeout: 300
       runas: root
