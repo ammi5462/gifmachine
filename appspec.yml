@@ -1,27 +1,7 @@
-# appspec.yml
 version: 0.0
 os: linux
-files:
-  - source: /
-    destination: /home/ec2-user/gifmachine
-
 hooks:
-  BeforeInstall:
-    - location: deploy-scripts/before-install.sh
-      timeout: 300
-      runas: ec2-user
-
-  ApplicationStop:
-    - location: deploy-scripts/stop-container.sh
-      timeout: 180
-      runas: ec2-user
-
   ApplicationStart:
-    - location: deploy-scripts/start-container.sh
+    - location: deploy.sh
       timeout: 300
-      runas: ec2-user
-
-  ValidateService:
-    - location: deploy-scripts/validate.sh
-      timeout: 180
-      runas: ec2-user
+      runas: root
