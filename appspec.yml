@@ -1,5 +1,11 @@
 version: 0.0
 os: linux
+
+# Define which files to copy from the artifact to the EC2 instance
+files:
+  - source: /
+    destination: /root/gifmachine
+
 hooks:
   ApplicationStart:
     - location: /root/gifmachine/deploy-scripts/deploy.sh
