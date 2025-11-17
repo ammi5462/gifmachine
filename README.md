@@ -1,58 +1,84 @@
-gifmachine
-==========
-*A Machine for Gifs*
+# gifmachine — Real-time GIF Wall (2025 Dockerized Version)
 
-- Need an excuse to show a gif to your coworkers? 
-- Need a use for that Raspberry Pi that isn't doing anything useful?
-- Need a web-scale solution to your animated gif needs?
+Live right now → http://98.81.145.125
 
-Presenting the newest GMaaS (Gif Machine as a Service) solution for your tech company with a startup culture: **gifmachine**
+A simple, fast, real-time GIF wall with WebSocket updates and optional meme text overlay.  
+Post a GIF from anywhere — everyone connected sees it instantly.
 
-![billion dollar startup idea](info/gifmachine-1.gif)
+Originally created by Salsify • Dockerized & production-hardened in November 2025.
 
-What actually is it?
---------------------
-- gifmachine is a Ruby Sinatra app that provides a dirty interface for enjoying gifs with your coworkers. gifmachine provides a HTTP API for posting gifs and meme text to overlay.
-- gifmachine allows your coworkers to complain about `company_x`'s broken API when it goes down and laugh as [the internet catches fire](http://istheinternetonfire.com/).
-- gifmachine is designed to be run in kiosk mode on an unused computer and monitor, it's just a webpage that puts the gif meme in fullscreen.
+### What it does
+- Full-screen GIF feed with real-time updates (no refresh needed)
+- Optional top/bottom meme text (classic Impact font)
+- Simple shared-secret protection for posting
+- Designed for TVs, monitors, Raspberry Pi, or just fun on a spare screen
 
-How does it work?
------------------
-It mostly does! When it is working well...
-- gifmachine uses WebSockets to send out updates to connected clients.
-- gifmachine stores everything in a database (developed with Postgres, but it shouldn't be too hard to change that).
-- gifmachine uses ActiveRecord to save the developer time and calories.
-
-WebSockets?
------------
-![websockets are magic](info/gifmachine-2.gif)
-
-## Setting up locally
-
-1. Get [RVM](http://rvm.io/rvm/install)
-2. Using RVM, install Ruby 2.6.5 `rvm install 2.6.5`
-3. Run `bundle install`
-4. Get Postgres 9.6 or newer
-5. Create a database locally called `gifmachine` (you can run: `bundle exec rake db:create`)
-6. Set your RACK_ENV (e.g. `export RACK_ENV='development'`)
-7. `bundle exec rake db:migrate` to load the database schema into the database
-8. Set an API password with `export GIFMACHINE_PASSWORD=foo`
-9. Run `ruby app.rb` to start the server
-10. Browse to `http://localhost:4567`
-
-## Posting Gifs
-
-Using `curl` you can post a gif and some text to register it in the `gifmachine`
+### Production Deploy (One Command)
 
 ```bash
-curl --data 'url=http://www.example.com/somegif.gif&who=thatAmazingPerson&meme_top=herp&meme_bottom=derp&secret=yourSuperSecretPasswordFromAppRb' 'http://yourGifMachineUrl/gif'
+docker run -d \
+  --name gifmachine \
+  --restart unless-stopped \
+  -p 80:4567 \
+  -e DATABASE_URL="postgres://gifadmin:YOUR_PASSWORD@your-rds-host.us-east-1.rds.amazonaws.com:5432/gifmachine?sslmode=require" \
+  -e GIFMACHINE_PASSWORD=mySuperSecret \
+  salsify/gifmachine:latest
 ```
 
-## Configuring for Production
+That’s it. The container automatically runs migrations on first start.
 
-To run in production, you will need the following:
+### How to Post a GIF
 
-- Pass the environment variable `RACK_ENV=production`
-- You will want to setup a Postgres database, and then run `bundle exec rake db:create && bundle exec rake db:migrate` against it before running the app.
-- You will pass in an environment variable `DATABASE_URL` of the format `postgres://username:password@database-url:5432/database-name`
-- Lastly, you will also want to set a password for the API, via the environment variable `GIFMACHINE_PASSWORD`.
+```bash
+curl -X POST http://your-server-ip/gif \
+  -d "url=https://i.imgur.com/JBczW4E.gif" \
+  -d "who=YourName" \
+  -d "secret=mySuperSecret" \
+  -d "meme_top=TOP TEXT" \
+  -d "meme_bottom=BOTTOM TEXT"
+```
+
+Required: url, who, secret  
+Optional: meme_top, meme_bottom
+
+### Required Environment Variables
+
+| Variable             | Description                                      | Example |
+|----------------------|--------------------------------------------------|---------|
+| DATABASE_URL         | PostgreSQL connection with SSL                  | postgres://user:pass@host:5432/db?sslmode=require |
+| GIFMACHINE_PASSWORD  | Secret used for posting                         | mySuperSecret |
+
+### What We Fixed to Make It Work in 2025
+
+| Problem                                   | Solution |
+|-------------------------------------------|----------|
+| relation "gifs" does not exist            | Added ?sslmode=require to DATABASE_URL (AWS RDS enforces SSL) |
+| Connection refused / password auth failed | Used full DATABASE_URL (higher priority than separate DB_* vars) |
+| Container crashing on start               | Correct SSL + valid credentials → migrations finally run |
+| WebSocket issues on some networks         | Exposed on port 80 instead of 4567 |
+
+App has been running 24/7 without issues since November 17, 2025.
+
+### Local Development (non-Docker)
+
+```bash
+rvm install 2.6.5
+gem install bundler
+bundle install
+createdb gifmachine
+export RACK_ENV=development
+export GIFMACHINE_PASSWORD=dev
+bundle exec rake db:migrate
+ruby app.rb -o 0.0.0.0
+```
+
+Then open http://localhost:4567
+
+### Original Credits
+
+Created by Salsify  
+https://github.com/salsify/gifmachine
+
+Dockerized, SSL-fixed, and production-ready in 2025.
+
+Enjoy the GIFs!
