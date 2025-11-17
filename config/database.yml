@@ -1,4 +1,4 @@
 development:
   adapter: postgresql
   database: gifmachine
-  host: localhost
+  host: gifmachine.c2pccckqsbed.us-east-1.rds.amazonaws.com
